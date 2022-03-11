@@ -45,9 +45,6 @@ def adjacent(cell):
         (cell[0]  , cell[1]+1)
     ]
 
-
-#---Check---#
-
 def get_cell_occurence(lab, cell=(0, 0), previous=None, markList=None):
     if markList == None:
         markList = [[0 for j in range(lab["ncolumns"])] for i in range(lab["nlines"])]
@@ -60,6 +57,47 @@ def get_cell_occurence(lab, cell=(0, 0), previous=None, markList=None):
             markList = get_cell_occurence(lab, cell = adj, previous = cell, markList=markList)
     return markList
 
+def merge_labs(lab1, lab2):
+    lab = {}
+    lab["ncolumns"] = max(lab1["ncolumns"], lab2["ncolumns"])
+    lab["nlines"] = max(lab1["nlines"], lab2["nlines"])
+    for y in range(lab["nlines"]):
+        for x in range(lab["ncolumns"]):
+            lab[(y, x)] = []
+            if (y, x) in lab1.keys():
+                for cell in lab1[(y, x)]:
+                    lab[(y, x)].append(cell)
+            if (y, x) in lab2.keys():
+                for cell in lab2[(y, x)]:
+                    if not cell in lab[(y, x)]:
+                        lab[(y, x)].append(cell)
+    return lab
+
+#---Check---#
+
+def is_well_defined(lab):
+    keys = lab.keys()
+
+    ymax, xmax = 0, 0
+    for key in keys:
+        if type(key) == type("a"):
+            continue
+        if key[0] > ymax: ymax=key[0]
+        if key[1] > xmax: xmax=key[1]
+        for cell in lab[key]:
+            if key not in lab[cell]:
+                return False
+
+    if lab["ncolumns"] != xmax+1 or lab["nlines"] != ymax+1:
+        return False
+
+    for y in range(lab["nlines"]):
+        for x in range(lab["ncolumns"]):
+            if (y, x) not in keys:
+                return False
+
+    return True
+
 def is_true_lab(lab):
     for line in get_cell_occurence(lab):
         for cell in line:
@@ -69,3 +107,9 @@ def is_true_lab(lab):
 
 
 #---Generation---#
+
+def generate_pseudo_lab(ncolumns, nlines):
+    nb_ver_walls = 2 ** ((ncolumns-1)*nlines)
+    nb_hor_walls = 2 ** (nlines*(ncolumns-1))
+    
+    
