@@ -195,3 +195,6 @@ def generate_pseudo_lab(ncolumns, nlines):
             labs.append(merge_labs(hor_lab, ver_lab))
     
     return labs
+
+def generate_lab_bf(ncolumns, nlines):
+    return [lab for lab in generate_pseudo_lab(ncolumns, nlines) if is_true_lab(lab)]
