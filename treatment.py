@@ -36,14 +36,15 @@ def decodeLab(lab):
 
 #---Misc---#
 
-def adjacent(cell):
-    
-    return [
-        (cell[0]-1, cell[1]  ),
-        (cell[0]  , cell[1]-1),
-        (cell[0]+1, cell[1]  ),
-        (cell[0]  , cell[1]+1)
-    ]
+def adjacent(cell, size=None): #size = [nlines, ncolumns] pour éviter de renvoyer des cellules hors labyrinthe
+    if size==None:
+        return [
+            (cell[0]-1, cell[1]  ),
+            (cell[0]  , cell[1]-1),
+            (cell[0]+1, cell[1]  ),
+            (cell[0]  , cell[1]+1)
+        ]
+    return [adj for adj in adjacent(cell) if (adj[0]>=0 and adj[0]<size[0] and adj[1]>=0 and adj[1]<size[1])]
 
 def get_cell_occurence(lab, cell=(0, 0), previous=None, markList=None):
     if markList == None:
@@ -81,12 +82,8 @@ def reverse_lab(lab):
         if type(key) == type("a"):
             continue
         l = []
-        for cell in adjacent(key):
-            if (
-             cell not in lab[key] 
-             and cell[0] >= 0 and cell[1] >= 0
-             and cell[0] < lab["nlines"] and cell[1] < lab["ncolumns"]
-               ):
+        for cell in adjacent(key, size=[lab["nlines"], lab["ncolumns"]]):
+            if cell not in lab[key]:
                 l.append(cell)
         lab[key] = l
     return lab
@@ -192,7 +189,9 @@ def generate_pseudo_lab(ncolumns, nlines):
     labs = []
     for hor_lab in hor_labs:
         for ver_lab in ver_labs:
-            labs.append(merge_labs(hor_lab, ver_lab))
+            lab = merge_labs(hor_lab, ver_lab)
+            if lab not in labs:
+                labs.append(lab)
     
     return labs
 
