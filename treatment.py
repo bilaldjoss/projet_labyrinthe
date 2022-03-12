@@ -37,7 +37,6 @@ def decodeLab(lab):
 #---Misc---#
 
 def adjacent(cell):
-    
     return [
         (cell[0]-1, cell[1]  ),
         (cell[0]  , cell[1]-1),
