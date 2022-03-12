@@ -197,3 +197,178 @@ def generate_pseudo_lab(ncolumns, nlines):
 
 def generate_lab_bf(ncolumns, nlines):
     return [lab for lab in generate_pseudo_lab(ncolumns, nlines) if is_true_lab(lab)]
+
+def genMerge(nlines, ncolumns):
+    lab = {"nlines" : nlines, "ncolumns" : ncolumns}
+    labtab = []                                          #contient les valeurs associées à chaque cellule du labyrinthe
+    groups = {}                                          #contient les groupes de cellules de même valeur
+    nwalls = nlines*(ncolumns - 1) + ncolumns*(nlines - 1)
+        
+    #initialisation de labtab et lab : les cellules ont initialement une valeur égale à leur rang
+    #les groupes sont des singletons 
+    for line in range(nlines):
+        labtab += [[]]
+        for col in range(ncolumns):
+            labtab[line] += [nlines*line + col]
+            lab[(line, col)] = []
+            groups[nlines*line + col] = [(line, col)]
+                
+    #merge les valeurs tant que le toutes les cellules n'ont pas la même valeur
+    while nlines*ncolumns - nlines - ncolumns != nwalls - 1:
+        #on choisit une cellule aléatoire
+        ncell = randint(0, nlines*ncolumns - 1) 
+        cell = (ncell//ncolumns, ncell%ncolumns)
+        vcell = labtab[cell[0]][cell[1]]
+            
+        #on choisit aléatoirement un voisin de cette cellule 
+        adj = adjacent(cell, [nlines, ncolumns])
+        chosen = adj[randint(0, len(adj)-1)]
+        vchosen = labtab[chosen[0]][chosen[1]]
+            
+        #si les deux ont la même valeur on s'en fout
+        if vcell==vchosen:
+            continue
+                
+        #sinon on attribue la valeur de la première à toutes les cellules menant à la deuxième
+        gchosen = groups[vchosen]
+        for i in range(len(gchosen)):
+            c = gchosen[i]
+            labtab[c[0]][c[1]] = vcell
+            groups[vcell] += [c]
+
+        #puis on brise le mur entre les deux 
+        lab[cell] += [chosen]
+        lab[chosen] += [cell]
+        nwalls -= 1
+        
+def genDumb(nlines, ncolumns):
+    lab = {"nlines" : nlines, "ncolumns" : ncolumns}
+    dejavu = []
+    for i in range(nlines):
+        dejavu += [[]]
+        for j in range(ncolumns):
+            dejavu[i] += [False]
+            lab[(i, j)] = []
+        
+    #on choisit une cellule de départ
+    nstartcell = randint(0, nlines*ncolumns - 1)
+    startcell = (nstartcell//ncolumns, nstartcell%ncolumns)
+        
+    lastfree = [startcell] #on garde en mémoire les dernières cellules adjacentes à quelque part de nouveau
+    position = startcell
+        
+    #on creuse jusqu'à n'en plus pouvoir
+    onpeutcreuser = True
+    while onpeutcreuser:
+        dejavu += [position]
+            
+        #show_lab(lab)
+            
+        #on vérifie si la dernière case censée être adjacente à du nouveau l'est effectivement
+        adjend = adjacent(lastfree[len(lastfree)-1], [nlines, ncolumns])
+        #si elle ne l'est pas on la vire et on vérifie que celles d'avant le sont
+        #si aucune ne l'est alors on a fini
+        while [a for a in adjend if a not in dejavu]==[]:
+            del lastfree[len(lastfree) - 1]
+            if len(lastfree)==0:
+                return lab
+            adjend = adjacent(lastfree[len(lastfree)-1], [nlines, ncolumns])
+                
+        #on regarde les voisins de la cellule
+        adj = adjacent(position, [nlines, ncolumns])
+                
+        #on regarde les cellules qu'on a pas déjà vues
+        new = [a for a in adj if a not in dejavu]
+        #si on est déjà passé autour on retourne là où on se rappelle avoir vu du neuf
+        if new==[]:
+            position = lastfree[len(lastfree)-1]
+            continue
+        #si elle a plus d'une cellule adjacente neuve, alors après avoir creusé il restera du neuf à côté
+        if len(new)>1:
+            lastfree += [position]
+            chosen = new[randint(0, len(new)-1)]
+                
+        #si elle n'en a qu'une, pas trop le choix
+        chosen = new[0]
+            
+        #on creuse
+        lab[position] += [chosen]
+        lab[chosen] += [position]
+            
+        #on se déplace
+        position = chosen
+
+def genExplore(nlines, ncolumns):
+    
+    def seuil(): #plus le seuil est grand, plus ça ressemble à dumb
+        return randint(min(nlines-1,ncolumns-1), max(nlines-1, ncolumns-1))
+    
+    lab = {"nlines" : nlines, "ncolumns" : ncolumns}
+    dejavu = []
+    for i in range(nlines):
+        dejavu += [[]]
+        for j in range(ncolumns):
+            dejavu[i] += [False]
+            lab[(i, j)] = []
+        
+    #on choisit une cellule de départ
+    nstartcell = randint(0, nlines*ncolumns - 1)
+    startcell = (nstartcell//ncolumns, nstartcell%ncolumns)
+        
+    lastfree = [startcell] #on garde en mémoire les dernières cellules adjacentes à quelque part de nouveau
+    position = startcell
+    count = 0
+        
+    #on explore tout
+    onpeutexplorer = True
+    while onpeutexplorer:
+        dejavu += [position]
+            
+        #show_lab(lab)
+            
+        #on actualise les cellules vues libres
+        i = 0
+        while i < len(lastfree):
+            adj = adjacent(lastfree[i], [nlines, ncolumns])
+            if [a for a in adj if a not in dejavu]==[]:
+                del lastfree[i]
+                continue
+            i+=1
+        if len(lastfree)==0:
+            return lab
+            
+        #on regarde les voisins de la cellule
+        adj = adjacent(position, [nlines, ncolumns])
+                
+        #on regarde les cellules qu'on a pas déjà vues
+        new = [a for a in adj if a not in dejavu]
+        #si on est déjà passé autour on retourne là où on se rappelle avoir vu du neuf
+        if new==[]:
+            position = lastfree[len(lastfree)-1]
+            continue
+        #si elle a plus d'une cellule adjacente neuve, alors après avoir creusé il restera du neuf à côté
+        if len(new)>1:
+            lastfree += [position]
+            chosen = new[randint(0, len(new)-1)]
+            
+        #on crée aléatoirement un autre chemin sur une des cellules vues libres dispos si la branche est trop longue
+        if count>seuil():
+            position = lastfree[randint(0, len(lastfree)-1)]
+            count = 0
+            continue
+                
+        #si elle n'en a qu'une, pas trop le choix
+        chosen = new[0]
+            
+        #on creuse
+        lab[position] += [chosen]
+        lab[chosen] += [position]
+            
+        #on se déplace
+        position = chosen
+        count += 1
+
+def generateLab(nlines, ncolumns, method=genExplore):
+    return method(nlines, ncolumns)
+
+
