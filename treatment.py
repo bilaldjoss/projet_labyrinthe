@@ -21,8 +21,8 @@ def encodeLab(tab):
 
 def decodeLab(lab):    
     tab = [["" for j in range(lab["ncolumns"])] for i in range(lab["nlines"])]
-    for i in range(len(t)):
-        for j in range(len(t[i])):
+    for i in range(len(tab)):
+        for j in range(len(tab[i])):
             if (i-1, j) in lab[(i, j)]:
                 tab[i][j] += 'h'
             if (i, j+1) in lab[(i, j)]:
@@ -31,7 +31,7 @@ def decodeLab(lab):
                 tab[i][j] += 'b'
             if (i, j-1) in lab[(i, j)]:
                 tab[i][j] += 'g'
-    return t
+    return tab
 
 
 #---Misc---#
